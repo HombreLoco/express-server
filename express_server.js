@@ -19,6 +19,13 @@ app.get("/urls.json", (req, res) => {
 })
 
 
+// this route sends back HTML code in the response
+
+app.get("/hello", (req, res) => {
+  res.end("<html><body>Hello <b>World</b></body></html>\n");
+});
+
+
 // app.listen allows the web server to listen for requests on the choosen port number
 
 app.listen(PORT, () => {
