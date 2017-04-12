@@ -56,6 +56,16 @@ app.get("/urls/:id", (req, res) => {
   res.render("urls_show", templateVars);
 })
 
+// this route updates a longURL given a shortURL value and redirects
+// to the entire list of URLs
+app.post("/urls/:id", (req, res) => {  // console.log(req.body.longURL);
+  // if (req.body.longURL)
+  urlDatabase[req.body.shortURL] = req.body.longURL;
+  res.redirect("/urls");
+})
+
+
+// this route deletes a specified URL and redirects to the entire list of URLs
 app.post("/urls/:id/delete", (req, res) => {
   delete urlDatabase[req.body.shortURL]
   res.redirect("/urls");

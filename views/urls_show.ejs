@@ -3,5 +3,10 @@
 <% include partials/_header %>
 
     <%= shortURL %> - <%= longURL %>
+    <form action=<%= `/urls/${shortURL}` %> method="POST">
+      <input type="hidden" name="shortURL" value=<%= `${shortURL}` %>>
+      <input id="newLongURL" type="text" name="longURL" placeholder="http://">
+      <input type="submit" value="Update">
+    </form>
 
 <% include partials/_footer %>

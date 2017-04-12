@@ -2,10 +2,12 @@
 
 <% include partials/_header %>
 
-    <a href="#">Create Tiny URL</a>
+    <a href="/urls/new">Create Tiny URL</a>
     <ul>
     <% for (var url in urls) { %>
         <li><%= url %> - <%= urls[url] %>
+          <br>
+          <a href=<%= `/urls/${url}` %>>Edit</a>
           <form action=<%= `/urls/${url}/delete` %> method="POST">
             <input type="hidden" name="shortURL" value=<%= `${url}` %>>
             <input type="submit" value="DELETE">
