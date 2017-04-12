@@ -1,0 +1,23 @@
+<!Doctype html>
+
+<html>
+  <head>
+    <title>TinyApp</title>
+  </head>
+
+<body>
+
+<header>
+  <% include partials/_header %>
+</header>
+
+  <a href="#">Create Tiny URL</a>
+  <ul>
+  <% for (var url in urls) { %>
+      <li><%= url %> - <%= urls[url] %></li>
+    <% } %>
+  </ul>
+
+
+</body>
+</html>
