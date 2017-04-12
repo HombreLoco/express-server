@@ -2,6 +2,7 @@
 
 const express = require("express");
 const bodyParser = require("body-parser");
+const randomize = require('randomatic');
 
 const app = express();
 const PORT = process.env.PORT || 8080; // default port 8080
@@ -45,14 +46,11 @@ app.get("/urls/new", (req, res) => {
   res.render("urls_new");
 })
 
-
-
 // this route renders a view to display a single URL and it's shortened form
 app.get("/urls/:id", (req, res) => {
   let templateVars = { shortURL: req.params.id, longURL: urlDatabase[req.params.id] };
   res.render("urls_show", templateVars);
 })
-
 
 // this route sends back HTML code in the response
 app.get("/hello", (req, res) => {
@@ -65,3 +63,10 @@ app.get("/hello", (req, res) => {
 app.listen(PORT, () => {
   console.log(`Example app listening on port ${PORT}!`);
 });
+
+// function to generate a shortURL
+function generateRandomString() {
+  let pattern = "Aa0";
+  let length = 6;
+  return randomize(pattern, length);
+}
