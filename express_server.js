@@ -3,12 +3,14 @@
 const express = require("express");
 const bodyParser = require("body-parser");
 const randomize = require('randomatic');
+const serveStatic = require('serve-static');
 
 const app = express();
 const PORT = process.env.PORT || 8080; // default port 8080
 
 app.set("view engine", "ejs");
 app.use(bodyParser.urlencoded({extended: true}));
+app.use(serveStatic(`${__dirname}/public`));
 
 
 // this variable holds the short and full URLs
@@ -52,6 +54,11 @@ app.get("/urls/new", (req, res) => {
 app.get("/urls/:id", (req, res) => {
   let templateVars = { shortURL: req.params.id, longURL: urlDatabase[req.params.id] };
   res.render("urls_show", templateVars);
+})
+
+app.post("/urls/:id/delete", (req, res) => {
+  delete urlDatabase[req.body.shortURL]
+  res.redirect("/urls");
 })
 
 // this route redirects from the short URL to the full URL
