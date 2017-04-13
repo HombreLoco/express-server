@@ -40,16 +40,28 @@ app.get("/", (req, res) => {
   res.end("Hello!");
 });
 
+// this route returns the login page
+app.get("/login", (req, res) => {
+  res.render("urls_login");
+})
+
 // this route receives the login form parameters and redirects to the users
 // index page
 app.post("/login", (req, res) => {
-  res.cookie("username", req.body.username);
-  res.redirect("/");
+  if (req.body.email === "" || req.body.password === "") {
+    res.status(400).end("Email and Password fields cannot be empty!")
+  } else if (!verifyUser(req.body.email, req.body.password)) {
+      res.status(403).end("No user found!");
+  } else {
+      let user = getUserByEmail(req.body.email);
+      res.cookie("user", user.id);
+      res.redirect("/");
+  }
 });
 
 // this route logs the user out by clearing the username cookie
 app.post("/logout", (req, res) => {
-  res.clearCookie("username");
+  res.clearCookie("user");
   res.redirect("/");
 });
 
@@ -60,22 +72,27 @@ app.get("/urls.json", (req, res) => {
 
 // this route returns a page for users to register to the website
 app.get("/register", (req, res) => {
-  let templateVars = { username: req.cookies["username"] };
-  res.render("urls_registration", templateVars);
+  res.render("urls_registration");
 });
 
-// this route calls the createNewUser function, creates the user, and redirects
-// back to the root page
+// this route calls the createNewUser function, checks if email already
+// exists or if email/password are empty strings, creates the user, and
+// redirects back to the root page
 app.post("/register", (req, res) => {
-  let newUser = addNewUser(req.body.email, req.body.password);
-  console.log(users);
-  res.cookie("username", users[newUser].id);
-  res.redirect("/");
+  if (req.body.email === "" || req.body.password === "") {
+    res.status(400).end("Email and Password fields cannot be empty!")
+  } else if (doesUserExist(req.body.email)) {
+      res.status(400).end("User alreadsy exists with that email!");
+  } else {
+      let newUser = addNewUser(req.body.email, req.body.password);
+      res.cookie("user", users[newUser].id);
+      res.redirect("/");
+  }
 });
 
 // this route renders a view to display all URLs and their shortened forms
 app.get("/urls", (req, res) => {
-  let templateVars = { urls: urlDatabase, username: req.cookies["username"] };
+  let templateVars = { urls: urlDatabase, user: getUserById(req.cookies["user"]) };
   res.render("urls_index", templateVars);
 });
 
@@ -84,29 +101,28 @@ app.get("/urls", (req, res) => {
 app.post("/urls", (req, res) => {
   let shortURL = generateRandomString();
   urlDatabase[shortURL] = req.body.longURL;
-  let templateVars = { username: req.cookies["username"] };
+  let templateVars = { user: getUserById(req.cookies["user"]) };
   res.redirect(`/urls/${shortURL}`, templateVars);
 });
 
 // this route renders a view for users to enter full URLs to a form to
 // be converted to short URLs by the server
 app.get("/urls/new", (req, res) => {
-  let templateVars = { username: req.cookies["username"] };
+  let templateVars = { user: getUserById(req.cookies["user"]) };
   res.render("urls_new", templateVars);
 });
 
 // this route renders a view to display a single URL and it's shortened form
 app.get("/urls/:id", (req, res) => {
   let templateVars = { shortURL: req.params.id, longURL: urlDatabase[req.params.id],
-                        username: req.cookies["username"]};
+                        user: getUserById(req.cookies["user"]) };
   res.render("urls_show", templateVars);
 });
 
 // this route updates a longURL given a shortURL value and redirects
 // to the entire list of URLs
-app.post("/urls/:id", (req, res) => {  // console.log(req.body.longURL);
-  // if (req.body.longURL)
-  let templateVars = { username: req.cookies["username"] };
+app.post("/urls/:id", (req, res) => {
+  let templateVars = { user: getUserById(req.cookies["user"]) };
   urlDatabase[req.body.shortURL] = req.body.longURL;
   res.redirect("/urls", templateVars);
 })
@@ -114,7 +130,7 @@ app.post("/urls/:id", (req, res) => {  // console.log(req.body.longURL);
 // this route deletes a specified URL and redirects to the entire list of URLs
 app.post("/urls/:id/delete", (req, res) => {
   delete urlDatabase[req.body.shortURL]
-  let templateVars = { username: req.cookies["username"] };
+  let templateVars = { user: getUserById(req.cookies["user"]) };
   res.redirect("/urls", templateVars);
 });
 
@@ -143,6 +159,7 @@ function generateRandomString() {
   return randomize(pattern, length);
 }
 
+// function to add a new user to the users object
 function addNewUser(email, password) {
   let newUserKey = "";
   let newUserNumber = (Object.keys(users).length + 1);
@@ -157,6 +174,46 @@ function addNewUser(email, password) {
     users[newUserKey].password = password;
 
     return newUserKey;
+}
+
+// function to check if user exists by their email
+function doesUserExist(email) {
+  for (var i in users) {
+    if (email === users[i].email) {
+      return true;
+    }
+    return false;
+  }
+}
+
+// function to find and return a user by their id number
+function getUserById(id) {
+  let user = {};
+  for (var i in users) {
+    if (id === users[i].id) {
+      return user;
+    }
+  }
+}
+
+// function to find and return a user by their email address
+function getUserByEmail(email) {
+  let user = {};
+  for (var i in users) {
+    if (email === users[i].email) {
+      return user;
+    }
+  }
+}
+
+// function to verify that a user is registered
+function verifyUser(email, password) {
+  for (var i in users) {
+    if (email === users[i].email && password === users[i].password) {
+      return true;
+    }
+  }
+  return false;
 }
 
 
