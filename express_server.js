@@ -59,7 +59,7 @@ app.post("/login", (req, res) => {
   }
 });
 
-// this route logs the user out by clearing the username cookie
+// this route logs the user out by clearing the user cookie
 app.post("/logout", (req, res) => {
   res.clearCookie("user");
   res.redirect("/");
@@ -137,7 +137,6 @@ app.post("/urls/:id/delete", (req, res) => {
 // this route redirects from the short URL to the full URL
 app.get("/u/:shortURL", (req, res) => {
   let longURL = urlDatabase[req.params.shortURL];
-  console.log(longURL);
   res.redirect(longURL);
 });
 
@@ -191,6 +190,7 @@ function getUserById(id) {
   let user = {};
   for (var i in users) {
     if (id === users[i].id) {
+      user = users[i];
       return user;
     }
   }
@@ -201,6 +201,7 @@ function getUserByEmail(email) {
   let user = {};
   for (var i in users) {
     if (email === users[i].email) {
+      user = users[i];
       return user;
     }
   }
