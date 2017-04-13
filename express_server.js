@@ -16,10 +16,23 @@ app.use(cookieParser());
 
 
 // this variable holds the short and full URLs
-var urlDatabase = {
+const urlDatabase = {
   "b2xVn2": "http://www.lighthouselabs.ca",
   "9sm5xK": "http://www.google.com"
 };
+
+const users = {
+  "u01": {
+    id: "randomId1",
+    email: "test1@email.com",
+    password: "password"
+  },
+  "u02": {
+    id: "randomId2",
+    email: "test2@email.com",
+    password: "password"
+  }
+}
 
 
 // app.get calls are routes to handle reponses given requested parameters
@@ -45,6 +58,21 @@ app.get("/urls.json", (req, res) => {
   res.json(urlDatabase);
 });
 
+// this route returns a page for users to register to the website
+app.get("/register", (req, res) => {
+  let templateVars = { username: req.cookies["username"] };
+  res.render("urls_registration", templateVars);
+});
+
+// this route calls the createNewUser function, creates the user, and redirects
+// back to the root page
+app.post("/register", (req, res) => {
+  let newUser = addNewUser(req.body.email, req.body.password);
+  console.log(users);
+  res.cookie("username", users[newUser].id);
+  res.redirect("/");
+});
+
 // this route renders a view to display all URLs and their shortened forms
 app.get("/urls", (req, res) => {
   let templateVars = { urls: urlDatabase, username: req.cookies["username"] };
@@ -56,7 +84,7 @@ app.get("/urls", (req, res) => {
 app.post("/urls", (req, res) => {
   let shortURL = generateRandomString();
   urlDatabase[shortURL] = req.body.longURL;
-  let templateVars = { username: req.cookies["username"] }
+  let templateVars = { username: req.cookies["username"] };
   res.redirect(`/urls/${shortURL}`, templateVars);
 });
 
@@ -114,3 +142,22 @@ function generateRandomString() {
   let length = 6;
   return randomize(pattern, length);
 }
+
+function addNewUser(email, password) {
+  let newUserKey = "";
+  let newUserNumber = (Object.keys(users).length + 1);
+    if (newUserNumber < 10) {
+      newUserKey = "u0" + newUserNumber.toString();
+    } else {
+      newUserKey = "u" + newUserNumber.toString();
+    }
+    users[newUserKey] = {};
+    users[newUserKey].id = generateRandomString();
+    users[newUserKey].email = email;
+    users[newUserKey].password = password;
+
+    return newUserKey;
+}
+
+
+

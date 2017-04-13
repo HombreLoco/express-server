@@ -1,0 +1,13 @@
+<% include partials/_head %>
+
+<% include partials/_header %>
+
+  <form action="/register" method="POST">
+    <label for="email">Email:</label>
+    <input id="email" type="email" name="email" placeholder="Email">
+    <label for="password">Password:</label>
+    <input id="password" type="password" name="password" placeholder="Password">
+    <input type="submit" value="Register">
+  </form>
+
+<% include partials/_footer %>
