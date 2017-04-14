@@ -17,8 +17,16 @@ app.use(cookieParser());
 
 // this variable holds the short and full URLs
 const urlDatabase = {
-  "b2xVn2": "http://www.lighthouselabs.ca",
-  "9sm5xK": "http://www.google.com"
+  "e9af7e": {
+    userId: "randomId1",
+    shortURL: "b2xVn2",
+    longURL: "http://www.lighthouselabs.ca"
+  },
+  "23nd9s": {
+    userId: "randomId2",
+    shortURL: "9sm5xK",
+    longURL: "http://www.google.com"
+  }
 };
 
 const users = {
@@ -37,7 +45,9 @@ const users = {
 
 // app.get calls are routes to handle reponses given requested parameters
 app.get("/", (req, res) => {
-  res.end("Hello!");
+  console.log("here");
+  // let templateVars = { user: getUserById(req.cookies["user"]) };
+  res.send("Tiny App loves you!");
 });
 
 // this route returns the login page
@@ -53,8 +63,8 @@ app.post("/login", (req, res) => {
   } else if (!verifyUser(req.body.email, req.body.password)) {
       res.status(403).end("No user found!");
   } else {
-      let user = getUserByEmail(req.body.email);
-      res.cookie("user", user.id);
+      let userLogin = getUserByEmail(req.body.email);
+      res.cookie("user", userLogin.id);
       res.redirect("/");
   }
 });
@@ -90,41 +100,58 @@ app.post("/register", (req, res) => {
   }
 });
 
-// this route renders a view to display all URLs and their shortened forms
+// this route renders a view to display a users URLs and their shortened forms
 app.get("/urls", (req, res) => {
-  let templateVars = { urls: urlDatabase, user: getUserById(req.cookies["user"]) };
-  res.render("urls_index", templateVars);
+  if (!req.cookies["user"]){
+    res.redirect("/");
+  } else {
+    let templateVars = { urls: getURLsByUserId(req.cookies["user"]) };
+    res.render("urls_index", templateVars);
+  }
 });
 
 // this route receives form submission data for converting long URLs to
 // short URLs
 app.post("/urls", (req, res) => {
-  let shortURL = generateRandomString();
-  urlDatabase[shortURL] = req.body.longURL;
   let templateVars = { user: getUserById(req.cookies["user"]) };
-  res.redirect(`/urls/${shortURL}`, templateVars);
+  let urlObject = createNewShortURL(req.cookies["user"], req.body.longURL);
+  // urlDatabase[shortURL] = req.body.longURL;
+  res.redirect(`/urls/${urlObject.shortURL}`, templateVars);
 });
 
 // this route renders a view for users to enter full URLs to a form to
 // be converted to short URLs by the server
 app.get("/urls/new", (req, res) => {
-  let templateVars = { user: getUserById(req.cookies["user"]) };
-  res.render("urls_new", templateVars);
+  if (!req.cookies["user"]){
+    res.redirect("/");
+  } else {
+      let templateVars = { user: getUserById(req.cookies["user"]) };
+      res.render("urls_new", templateVars);
+  }
 });
 
 // this route renders a view to display a single URL and it's shortened form
 app.get("/urls/:id", (req, res) => {
-  let templateVars = { shortURL: req.params.id, longURL: urlDatabase[req.params.id],
-                        user: getUserById(req.cookies["user"]) };
-  res.render("urls_show", templateVars);
+  if (!req.cookies["user"]){
+    res.redirect("/");
+  } else {
+      let templateVars = { shortURL: req.params.id, longURL: getURLByShortURL(req.params.id),
+                            user: getUserById(req.cookies["user"]) };
+      res.render("urls_show", templateVars);
+  }
 });
 
 // this route updates a longURL given a shortURL value and redirects
 // to the entire list of URLs
 app.post("/urls/:id", (req, res) => {
-  let templateVars = { user: getUserById(req.cookies["user"]) };
-  urlDatabase[req.body.shortURL] = req.body.longURL;
-  res.redirect("/urls", templateVars);
+  if (!req.cookies["user"]){
+    res.redirect("/");
+  } else {
+      let templateVars = { user: getUserById(req.cookies["user"]) };
+      updateURL(req.cookies["user"], req.body.shortURL, req.body.longURL);
+      // urlDatabase[req.body.shortURL] = req.body.longURL;
+      res.redirect("/urls", templateVars);
+  }
 })
 
 // this route deletes a specified URL and redirects to the entire list of URLs
@@ -187,22 +214,22 @@ function doesUserExist(email) {
 
 // function to find and return a user by their id number
 function getUserById(id) {
-  let user = {};
+  let user1 = {};
   for (var i in users) {
     if (id === users[i].id) {
-      user = users[i];
-      return user;
+      user1 = users[i];
+      return user1;
     }
   }
 }
 
 // function to find and return a user by their email address
 function getUserByEmail(email) {
-  let user = {};
+  let user1 = {};
   for (var i in users) {
     if (email === users[i].email) {
-      user = users[i];
-      return user;
+      user1 = users[i];
+      return user1;
     }
   }
 }
@@ -215,6 +242,53 @@ function verifyUser(email, password) {
     }
   }
   return false;
+}
+
+function createNewShortURL(userId, longURL) {
+  let shortURLKey = generateRandomString();
+  let shortURL = generateRandomString();
+
+  urlDatabase[shortURLKey] = {};
+  urlDatabase[shortURLKey].id = userId;
+  urlDatabase[shortURLKey].shortURL = shortURL;
+  urlDatabase[shortURLKey].longURL = longURL;
+
+  return urlDatabase[shortURLKey];
+}
+
+function getURLsByUserId(userId) {
+  let userURLS = {};
+  for (var i in urlDatabase) {
+    if (urlDatabase[i].userId === userId) {
+      userURLS[i] = urlDatabase[i];
+    }
+  }
+  return userURLS;
+}
+
+function getURLByShortURL(shortURL){
+  let url = {};
+  for (var i in urlDatabase) {
+    if (urlDatabase[i].shortURL === shortURL) {
+      url = urlDatabase[i];
+    }
+  }
+}
+
+function updateURL(userId, shortURL, longURL) {
+  for (var i in urlDatabase) {
+    if (shortURL === urlDatabase[i].shortURL && userId === urlDatabase[i].userId) {
+      urlDatabase[i].longURL = longURL;
+    }
+  }
+}
+
+function deleteURL(userId, shortURL) {
+  for (var i in urlDatabase) {
+    if (shortURL === urlDatabase[i].shortURL && userId === urlDatabase[i].userId) {
+      delete urlDatabase[i];
+    }
+  }
 }
 
 
