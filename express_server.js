@@ -65,7 +65,7 @@ app.post("/login", (req, res) => {
   } else {
       let userLogin = getUserByEmail(req.body.email);
       res.cookie("user", userLogin.id);
-      res.redirect("/");
+      res.redirect("/urls");
   }
 });
 
@@ -105,7 +105,11 @@ app.get("/urls", (req, res) => {
   if (!req.cookies["user"]){
     res.redirect("/");
   } else {
-    let templateVars = { urls: getURLsByUserId(req.cookies["user"]) };
+    // console.log(urlDatabase);
+
+    let foundUser = getUserById(req.cookies["user"]);
+    let userURLS = getURLsByUserId(req.cookies["user"]);
+    let templateVars = { user: foundUser, urls: userURLS };
     res.render("urls_index", templateVars);
   }
 });
@@ -113,10 +117,9 @@ app.get("/urls", (req, res) => {
 // this route receives form submission data for converting long URLs to
 // short URLs
 app.post("/urls", (req, res) => {
-  let templateVars = { user: getUserById(req.cookies["user"]) };
   let urlObject = createNewShortURL(req.cookies["user"], req.body.longURL);
-  // urlDatabase[shortURL] = req.body.longURL;
-  res.redirect(`/urls/${urlObject.shortURL}`, templateVars);
+  console.log("urlDatabase", urlDatabase);
+  res.redirect(`/urls/${urlObject.shortURL}`);
 });
 
 // this route renders a view for users to enter full URLs to a form to
@@ -125,18 +128,24 @@ app.get("/urls/new", (req, res) => {
   if (!req.cookies["user"]){
     res.redirect("/");
   } else {
-      let templateVars = { user: getUserById(req.cookies["user"]) };
+      let foundUser = getUserById(req.cookies["user"])
+      let templateVars = { user: foundUser };
       res.render("urls_new", templateVars);
   }
 });
 
 // this route renders a view to display a single URL and it's shortened form
 app.get("/urls/:id", (req, res) => {
+  console.log("urlDatabase-again: ", urlDatabase);
   if (!req.cookies["user"]){
     res.redirect("/");
   } else {
-      let templateVars = { shortURL: req.params.id, longURL: getURLByShortURL(req.params.id),
-                            user: getUserById(req.cookies["user"]) };
+      let urlObject = getURLByShortURL(req.params.id);
+      let userObj = getUserById(req.cookies["user"])
+      let templateVars = { shortURL: req.params.id, longURL: urlObject.longURL,
+                            user: userObj };
+      console.log("here again");
+      console.log("urlDatabase-again2: ", urlDatabase);
       res.render("urls_show", templateVars);
   }
 });
@@ -147,18 +156,16 @@ app.post("/urls/:id", (req, res) => {
   if (!req.cookies["user"]){
     res.redirect("/");
   } else {
-      let templateVars = { user: getUserById(req.cookies["user"]) };
       updateURL(req.cookies["user"], req.body.shortURL, req.body.longURL);
       // urlDatabase[req.body.shortURL] = req.body.longURL;
-      res.redirect("/urls", templateVars);
+      res.redirect("/urls");
   }
 })
 
 // this route deletes a specified URL and redirects to the entire list of URLs
 app.post("/urls/:id/delete", (req, res) => {
-  delete urlDatabase[req.body.shortURL]
-  let templateVars = { user: getUserById(req.cookies["user"]) };
-  res.redirect("/urls", templateVars);
+  deleteURL(req.cookies["user"], req.body.shortURL);
+  res.redirect("/urls");
 });
 
 // this route redirects from the short URL to the full URL
@@ -253,6 +260,8 @@ function createNewShortURL(userId, longURL) {
   urlDatabase[shortURLKey].shortURL = shortURL;
   urlDatabase[shortURLKey].longURL = longURL;
 
+  console.log(urlDatabase);
+
   return urlDatabase[shortURLKey];
 }
 
@@ -261,6 +270,7 @@ function getURLsByUserId(userId) {
   for (var i in urlDatabase) {
     if (urlDatabase[i].userId === userId) {
       userURLS[i] = urlDatabase[i];
+      console.log(userURLS);
     }
   }
   return userURLS;
@@ -269,8 +279,10 @@ function getURLsByUserId(userId) {
 function getURLByShortURL(shortURL){
   let url = {};
   for (var i in urlDatabase) {
+    // console.log(i);
     if (urlDatabase[i].shortURL === shortURL) {
-      url = urlDatabase[i];
+      // console.log(urlDatabase[i]);
+      return urlDatabase[i];
     }
   }
 }
