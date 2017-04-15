@@ -9,9 +9,9 @@
           <br>
 
           <form action=<%= `/urls/${url}/delete` %> method="POST">
-            <li><%= urls[url].shortURL %> - <%= urls[url].longURL %>
-            <a href=<%= `/urls/${urls[url].shortURL}` %>>Edit</a>
-            <input type="hidden" name="shortURL" value=<%= `${urls[url].shortURL}` %>>
+            <li><%= url %> - <%= urls[url].longURL %>
+            <a href=<%= `/urls/${url}` %>>Edit</a>
+            <input type="hidden" name="shortURL" value=<%= `${url}` %>>
             <input type="submit" value="DELETE">
             </li>
           </form>
