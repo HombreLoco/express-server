@@ -11,7 +11,7 @@ const bcrypt = require("bcrypt");
 
 
 const app = express();
-const PORT = process.env.PORT || 8080; // default port 8080
+const PORT = process.env.PORT || 3000; // default port 8080
 
 
 app.set("view engine", "ejs");
@@ -27,11 +27,13 @@ app.use(cookieSession( {
 const urlDatabase = {
   "b2xVn2": {
     userId: "randomId1",
-    longURL: "http://www.lighthouselabs.ca"
+    longURL: "http://www.lighthouselabs.ca",
+    clickCount: 2
   },
   "9sm5xK": {
     userId: "randomId2",
-    longURL: "http://www.google.com"
+    longURL: "http://www.google.com",
+    clickCount: 4
   }
 };
 
@@ -52,13 +54,25 @@ const users = {
 
 // app.get calls are routes to handle reponses given requested parameters
 app.get("/", (req, res) => {
-  res.send("Tiny App loves you!");
+  if (req.session.user_id) {
+    res.redirect("/urls");
+  } else {
+    req.session = null;
+  res.redirect("/login");
+  }
+
 });
 
 
 // this route returns the login page
 app.get("/login", (req, res) => {
-  res.render("urls_login");
+  if (req.session.user_id) {
+    res.redirect("/urls");
+  } else {
+    req.session = null;
+    res.render("urls_login");
+  }
+
 })
 
 
@@ -68,7 +82,7 @@ app.post("/login", (req, res) => {
   if (req.body.email === "" || req.body.password === "") {
     res.status(400).end("Email and Password fields cannot be empty!")
   } else if (!verifyUser(req.body.email, req.body.password)) {
-      res.status(403).end("No user found!");
+      res.status(401).end("No user found!");
   } else {
       let userLogin = getUserByEmail(req.body.email);
       // res.cookie("user", userLogin.id);
@@ -94,7 +108,12 @@ app.get("/urls.json", (req, res) => {
 
 // this route returns a page for users to register to the website
 app.get("/register", (req, res) => {
-  res.render("urls_registration");
+  if (req.session.user_id) {
+    res.redirect("/urls");
+  } else {
+    req.session = null;
+    res.render("urls_registration");
+  }
 });
 
 
@@ -118,11 +137,12 @@ app.post("/register", (req, res) => {
 // this route renders a view to display a users URLs and their shortened forms
 app.get("/urls", (req, res) => {
   if (!req.session.user_id){
-    res.redirect("/login");
+    // res.status(401).redirect("/sorry");
+    res.status(401).render("urls_sorry");
   } else {
     let foundUser = getUserById(req.session.user_id);
     let userURLS = getURLsByUserId(foundUser.id);
-    let templateVars = { user: foundUser, urls: userURLS };
+    let templateVars = { user: foundUser, urls: userURLS, error: "" };
     res.render("urls_index", templateVars);
   }
 });
@@ -131,8 +151,15 @@ app.get("/urls", (req, res) => {
 // this route receives form submission data for converting long URLs to
 // short URLs
 app.post("/urls", (req, res) => {
-  let urlObject = createNewShortURL(req.session.user_id, req.body.longURL);
-  res.redirect(`/urls/${urlObject}`);
+  if (!req.session.user_id){
+    res.status(401).render("urls_sorry");
+  } else if (req.body.longURL === "") {
+    res.redirect("/urls");
+  } else {
+    let urlObject = createNewShortURL(req.session.user_id, req.body.longURL);
+    // res.redirect(`/urls/${urlObject}`);
+    res.redirect("urls");
+  }
 });
 
 
@@ -140,7 +167,7 @@ app.post("/urls", (req, res) => {
 // be converted to short URLs by the server
 app.get("/urls/new", (req, res) => {
   if (!req.session.user_id){
-    res.redirect("/login");
+    res.status(401).render("urls_sorry");
   } else {
       let foundUser = getUserById(req.session.user_id)
       let templateVars = { user: foundUser };
@@ -152,13 +179,27 @@ app.get("/urls/new", (req, res) => {
 // this route renders a view to display a single URL and it's shortened form
 app.get("/urls/:id", (req, res) => {
   if (!req.session.user_id){
-    res.redirect("/login");
+    res.status(401).render("urls_sorry");
   } else {
+      let errors = "";
       let urlObject = getURLByShortURL(req.params.id);
       let userObj = getUserById(req.session.user_id)
-      let templateVars = { shortURL: req.params.id, longURL: urlObject.longURL,
-                            user: userObj, urls: urlDatabase };
-      res.render("urls_show", templateVars);
+      let userURLS = getURLsByUserId(userObj.id);
+      let templateVars = { shortURL: req.params.id, url: urlObject,
+                            user: userObj, urls: userURLS, error: errors };
+      if (!urlObject) {
+        errors = "That URL does not exist!";
+        templateVars.error = errors;
+        res.status(404).render("urls_index", templateVars);
+      } else if (!verifyUserOwnsShortURL(req.session.user_id, req.params.id)) {
+        errors = "You do not have access to that URL!";
+        templateVars.error = errors;
+        res.status(403).render("urls_index", templateVars);
+      } else {
+        errors = "";
+        templateVars.error = errors;
+        res.render("urls_show", templateVars);
+      }
   }
 });
 
@@ -167,12 +208,28 @@ app.get("/urls/:id", (req, res) => {
 // to the entire list of URLs
 app.post("/urls/:id", (req, res) => {
   if (!req.session.user_id){
-    res.redirect("/login");
+    res.status(401).render("urls_sorry");
   } else {
+      let errors = "";
+      let urlObject = getURLByShortURL(req.params.id);
+      let userObj = getUserById(req.session.user_id)
+      let userURLS = getURLsByUserId(userObj.id);
+      let templateVars = { shortURL: req.params.id, url: urlObject,
+                            user: userObj, urls: userURLS, error: errors };
+      if (!urlObject) {
+        errors = "That URL does not exist!";
+        templateVars.error = errors;
+        res.status(404).render("urls_index", templateVars);
+      } else if (!verifyUserOwnsShortURL(req.session.user_id, req.params.id)) {
+        errors = "You do not have access to that URL!";
+        templateVars.error = errors;
+        res.status(403).render("urls_index", templateVars);
+      } else {
       updateURL(req.session.user_id, req.body.shortURL, req.body.longURL);
       res.redirect("/urls");
+      }
   }
-})
+});
 
 
 // this route deletes a specified URL and redirects to the entire list of URLs
@@ -184,9 +241,19 @@ app.post("/urls/:id/delete", (req, res) => {
 
 // this route redirects from the short URL to the full URL
 app.get("/u/:shortURL", (req, res) => {
-  let longURL = urlDatabase[req.params.shortURL].longURL;
-  res.redirect(longURL);
+  if (!getURLByShortURL(req.params.shortURL)) {
+    res.status(404).send("The URL you tried to access does not exist!");
+  } else {
+    let longURL = urlDatabase[req.params.shortURL].longURL;
+    incrementClickCounter(req.params.shortURL);
+    res.redirect(longURL);
+  }
 });
+
+app.get("/sorry", (req, res) => {
+  req.session = null;
+  res.render("urls_sorry");
+})
 
 
 // this route sends back HTML code in the response
@@ -279,7 +346,13 @@ function createNewShortURL(userId, longURL) {
   let shortURL = generateRandomString();
   urlDatabase[shortURL] = {};
   urlDatabase[shortURL].userId = userId;
-  urlDatabase[shortURL].longURL = longURL;
+  urlDatabase[shortURL].clickCount = 0;
+
+  if (longURL.includes("http://") || longURL.includes("https://")) {
+    urlDatabase[shortURL].longURL = longURL;
+  } else {
+    urlDatabase[shortURL].longURL = "https://" + longURL;
+  }
 
   return shortURL;
 }
@@ -305,11 +378,25 @@ function getURLByShortURL(shortURL){
   }
 }
 
+function verifyUserOwnsShortURL(userId, shortURL) {
+  console.log("userId:", userId);
+  console.log("shortURL:", shortURL);
+  for (var i in urlDatabase) {
+    console.log("i:", i);
+    if (i === shortURL) {
+      console.log("i-userId:", urlDatabase[i].userId);
+      return urlDatabase[i].userId === userId;
+    }
+  }
+  return false;
+}
+
 
 function updateURL(userId, shortURL, longURL) {
   for (var i in urlDatabase) {
     if ((shortURL === i && userId === urlDatabase[i].userId) && longURL !== "") {
       urlDatabase[i].longURL = longURL;
+      urlDatabase[i].clickCount = 0;
     }
   }
 }
@@ -321,5 +408,10 @@ function deleteURL(userId, shortURL) {
       delete urlDatabase[i];
     }
   }
+}
+
+function incrementClickCounter(shortURL) {
+  let sURL = getURLByShortURL(shortURL);
+  sURL.clickCount += 1;
 }
 

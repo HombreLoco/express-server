@@ -2,21 +2,39 @@
 
 <% include partials/_header %>
 
-    <a href="/urls/new">Create Tiny URL</a>
-    <ul>
-    <% for (var url in urls) { %>
+<% if (error !== "") { %>
+  <p class="errorMessage"><%= error %></p>
 
-          <br>
+<% } %>
 
-          <form action=<%= `/urls/${url}/delete` %> method="POST">
-            <li><%= url %> - <%= urls[url].longURL %>
-            <a href=<%= `/urls/${url}` %>>Edit</a>
+<h2 class="positionMyURLS">My URLs</h2>
+
+  <section class="positionTable">
+    <table class="u-full-width">
+      <thead>
+        <tr>
+          <th>Full URL</th>
+          <th>Short URL</th>
+          <th>Visits</th>
+          <th></th>
+          <th></th>
+        </tr>
+      </thead>
+      <tbody>
+        <% for (var url in urls) { %>
+          <tr>
+            <td><%= urls[url].longURL %></td>
+            <td><%= url %></td>
+            <td><%= urls[url].clickCount %></td>
+            <td><a href=<%= `/urls/${url}` %> class="button editButton">Edit</a></td>
+            <td><form class="deleteButton" action=<%= `/urls/${url}/delete` %> method="POST">
             <input type="hidden" name="shortURL" value=<%= `${url}` %>>
             <input type="submit" value="DELETE">
-            </li>
-          </form>
-
-      <% } %>
-    </ul>
+            </form></td>
+          </tr>
+        <% } %>
+      </tbody>
+    </table>
+  </section>
 
 <% include partials/_footer %>

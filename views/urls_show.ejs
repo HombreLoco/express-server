@@ -2,11 +2,49 @@
 
 <% include partials/_header %>
 
-    <%= shortURL %> - <%= longURL %>
-    <form action=<%= `/urls/${shortURL}` %> method="POST">
-      <input type="hidden" name="shortURL" value=<%= `${shortURL}` %>>
-      <input id="newLongURL" type="text" name="longURL" placeholder="http://">
-      <input type="submit" value="Update">
-    </form>
+<h2 class="centerForm">Update URL</h2>
+
+<section class="centerForm">
+
+  <table class="u-full-width">
+    <thead>
+      <tr>
+        <th>Full URL</th>
+        <th>Short URL</th>
+        <th>Visits</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><%= url.longURL %></td>
+        <td><%= shortURL %></td>
+        <td><%= url.clickCount %></td>
+      </tr>
+    </tbody>
+  </table>
+
+
+<table class="u-full-width">
+  <tbody>
+    <tr>
+      <td>
+        <form action=<%= `/urls/${shortURL}` %> method="POST">
+          <input type="hidden" name="shortURL" value=<%= `${shortURL}` %>>
+          <input id="newLongURL" type="text" name="longURL" placeholder="http://" required>
+          <br>
+          <input class="" style="margin-left: 2em" type="submit" value="Update">
+        </form>
+        <form class="deleteButton2" action=<%= `/urls/${shortURL}/delete` %> method="POST">
+          <input type="hidden" name="shortURL" value=<%= shortURL %>>
+          <input style="margin-left: 2em" type="submit" value="DELETE">
+        </form>
+      </td>
+    </tr>
+  </tbody>
+</table>
+
+
+
+</section>
 
 <% include partials/_footer %>

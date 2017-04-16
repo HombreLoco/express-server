@@ -1,3 +1,167 @@
 body {
   background-color: #dbe8ff;
+
 }
+
+nav ul {
+  list-style-type: none;
+  margin: 0;
+  padding: 0;
+  overflow: hidden;
+  background-color: #333;
+  position: fixed;
+  top: 0;
+  width: 100%;
+
+  overflow: hidden;
+  margin: 0 auto;
+  text-align: right;
+  float: right;
+}
+
+nav li {
+/*  font-family: "Raleway", "HelveticaNeue", "Helvetica Neue", Helvetica, Arial, sans-serif;
+*/  margin-top: .5em;
+  float: right;
+}
+
+nav li #logoutButton {
+  all: unset;
+  /*position: relative;*/
+  /*margin: .5em;*/
+  /*float: right;*/
+  padding: 14px 16px;
+  top: .5em;
+  right: 1em;
+  color: white;
+  cursor: pointer;
+
+}
+
+nav li #logoutButton:hover {
+  color: #2f6fd6;
+}
+
+nav li a {
+  display: block;
+  color: white;
+  text-align: center;
+  padding: 14px 16px;
+  text-decoration: none;
+}
+
+nav li a:hover {
+  color: #2f6fd6;
+}
+
+.email {
+  display: block;
+  color: white;
+  text-align: center;
+  padding: 14px 16px;
+  text-decoration: none;
+  cursor: default;
+}
+
+.email:hover {
+  color: white;
+}
+
+
+#siteName {
+  display: inline;
+  position: relative;
+  float: left;
+  color: #2f6fd6;
+  top: .5em;
+  left: 1em;
+
+}
+
+#siteName a {
+  text-decoration: none;
+  color: #2f6fd6;
+}
+
+#siteName a:hover {
+  color: #6893d8;
+}
+
+main {
+  margin: 10em 0 0 0;
+}
+
+.centerForm {
+  margin: auto;
+  width: 50%;
+  padding: 10px;
+}
+
+form input[type="submit"],
+form td input[type="submit"],
+table td form input[type="submit"] {
+  margin: 1em 0 0 0;
+  background-color: #666;
+  color: white;
+  font-family: "Raleway", "HelveticaNeue", "Helvetica Neue", Helvetica, Arial, sans-serif;
+}
+
+form input[type="submit"]:hover {
+  color: #dddddd;
+}
+
+#centerSorry {
+  margin: 4em;
+  font-size: 1.5em;
+}
+
+.editButton {
+  position: relative;
+  background-color: #666;
+  color: white;
+  font-family: "Raleway", "HelveticaNeue", "Helvetica Neue", Helvetica, Arial, sans-serif;
+  top: .4em;
+}
+
+.editButton:hover {
+  color: #dddddd;
+}
+
+.deleteButton {
+  position: relative;
+  top: .4em;
+}
+
+.positionTable {
+  margin: 3em 3em 3em 5em;
+}
+
+.positionMyURLS {
+  margin: 0 0 0 2em;
+}
+
+.errorMessage {
+  margin: 0 0 2em 2em;
+  color: red;
+}
+
+/*.buttonGray {
+  all: unset;
+  background-color: #666;
+  color: white;
+}*/
+
+.deleteButton2 {
+  display: inline;
+  position: relative;
+  top: -1em;
+}
+
+.buttonFloatRight {
+  float: right;
+  /*position: relative;*/
+}
+
+
+
+

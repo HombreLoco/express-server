@@ -1,15 +1,18 @@
 <% include partials/_head %>
 
-<h2>Login to TinyApp</h2>
+<% include partials/_headerNotLoggedIn %>
 
-<p><a href="/register">Create Account</a></p>
+<h2 class="centerForm">Login</h2>
 
+<section class="centerForm">
   <form action="/login" method="POST">
     <label for="email">Email:</label>
-    <input id="email" type="email" name="email" placeholder="Email">
+    <input id="email" type="email" name="email" placeholder="Email" required>
     <label for="password">Password:</label>
-    <input id="password" type="password" name="password" placeholder="Password">
+    <input id="password" type="password" name="password" placeholder="Password" required>
+    <br>
     <input type="submit" value="Login">
   </form>
+</section>
 
 <% include partials/_footer %>

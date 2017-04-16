@@ -1,14 +1,28 @@
 <header>
 
-  <h2>Tiny App</h2>
+  <nav>
+    <form action="/logout" method="POST">
+      <ul>
+        <span id="siteName"><a href="/urls"><h2>Tiny App</h2></a></span>
+        <li><input id="logoutButton" type="submit" value="Logout"></li>
+        <li><a href="/urls/new">Create URL</a></li>
+        <li><a href="/urls">My URLs</a></li>
+        <li><a class="email"><%= user.email %></a></li>
+      </ul>
+    </form>
+  </nav>
 
+
+
+<!-- <a href="/urls">My URLs</a>
   <% if (user) { %>
     <form action="/logout" method="POST">
-    <a href="/urls">My URLs</a>
       <input type="submit" value="Logout">
     </form>
   <% } else { %>
     <a href="/register">Register</a> <a href="/login">Login</a>
-  <% } %>
+  <% } %> -->
+
+
 
 </header>
