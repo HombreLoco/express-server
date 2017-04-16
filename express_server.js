@@ -4,8 +4,7 @@
 const express = require("express");
 const bodyParser = require("body-parser");
 const randomize = require("randomatic");
-const serveStatic = require("serve-static");
-// const cookieParser = require("cookie-parser");
+const serveStatic = require("serve-static");// const cookieParser = require("cookie-parser");
 const cookieSession = require('cookie-session')
 const bcrypt = require("bcrypt");
 
@@ -17,7 +16,6 @@ const PORT = process.env.PORT || 3000; // default port 8080
 app.set("view engine", "ejs");
 app.use(bodyParser.urlencoded({extended: true}));
 app.use(serveStatic(`${__dirname}/public`));
-// app.use(cookieParser());
 app.use(cookieSession( {
   name: "session",
   keys: ["key1", "key2"]
@@ -85,7 +83,6 @@ app.post("/login", (req, res) => {
       res.status(401).end("No user found!");
   } else {
       let userLogin = getUserByEmail(req.body.email);
-      // res.cookie("user", userLogin.id);
       req.session.user_id = userLogin.id;
       res.redirect("/urls");
   }
@@ -94,7 +91,6 @@ app.post("/login", (req, res) => {
 
 // this route logs the user out by clearing the user cookie
 app.post("/logout", (req, res) => {
-  // res.clearCookie("user");
   req.session = null;
   res.redirect("/login");
 });
@@ -127,7 +123,6 @@ app.post("/register", (req, res) => {
       res.status(400).end("User alreadsy exists with that email!");
   } else {
       let newUser = addNewUser(req.body.email, req.body.password);
-      // res.cookie("user", users[newUser].id);
       req.session.user_id = users[newUser].id;
       res.redirect("/urls");
   }
@@ -137,7 +132,6 @@ app.post("/register", (req, res) => {
 // this route renders a view to display a users URLs and their shortened forms
 app.get("/urls", (req, res) => {
   if (!req.session.user_id){
-    // res.status(401).redirect("/sorry");
     res.status(401).render("urls_sorry");
   } else {
     let foundUser = getUserById(req.session.user_id);
@@ -157,7 +151,6 @@ app.post("/urls", (req, res) => {
     res.redirect("/urls");
   } else {
     let urlObject = createNewShortURL(req.session.user_id, req.body.longURL);
-    // res.redirect(`/urls/${urlObject}`);
     res.redirect("urls");
   }
 });
@@ -245,8 +238,9 @@ app.get("/u/:shortURL", (req, res) => {
     res.status(404).send("The URL you tried to access does not exist!");
   } else {
     let longURL = urlDatabase[req.params.shortURL].longURL;
+    let validLongURL = checkValidURL(longURL)
     incrementClickCounter(req.params.shortURL);
-    res.redirect(longURL);
+    res.redirect(validLongURL);
   }
 });
 
@@ -260,8 +254,6 @@ app.get("/sorry", (req, res) => {
 app.get("/hello", (req, res) => {
   res.end("<html><body>Hello <b>World</b></body></html>\n");
 });
-
-
 
 
 // app.listen allows the web server to listen for requests on the choosen port number
@@ -347,12 +339,7 @@ function createNewShortURL(userId, longURL) {
   urlDatabase[shortURL] = {};
   urlDatabase[shortURL].userId = userId;
   urlDatabase[shortURL].clickCount = 0;
-
-  if (longURL.includes("http://") || longURL.includes("https://")) {
-    urlDatabase[shortURL].longURL = longURL;
-  } else {
-    urlDatabase[shortURL].longURL = "https://" + longURL;
-  }
+  urlDatabase[shortURL].longURL = longURL;
 
   return shortURL;
 }
@@ -379,12 +366,8 @@ function getURLByShortURL(shortURL){
 }
 
 function verifyUserOwnsShortURL(userId, shortURL) {
-  console.log("userId:", userId);
-  console.log("shortURL:", shortURL);
   for (var i in urlDatabase) {
-    console.log("i:", i);
     if (i === shortURL) {
-      console.log("i-userId:", urlDatabase[i].userId);
       return urlDatabase[i].userId === userId;
     }
   }
@@ -413,5 +396,13 @@ function deleteURL(userId, shortURL) {
 function incrementClickCounter(shortURL) {
   let sURL = getURLByShortURL(shortURL);
   sURL.clickCount += 1;
+}
+
+function checkValidURL(longURL) {
+  if (longURL.includes("http://") || longURL.includes("https://")) {
+    return longURL;
+  } else {
+      return "https://" + longURL;
+  }
 }
 
